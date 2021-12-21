@@ -25,9 +25,7 @@ class Branch():
 
 
 def load_branches(dataset):
-    """Static method: load branch.csv dataset and create a list of branch."""
-    branches = []
-    for row in csv.DictReader(open(dataset)):
-        if row['branch'].isdigit():  # don't add bottom row as a branch object
-            branches.append(Branch(**row))
-    return branches
+    """Load branch.csv dataset and return a list of branches."""
+    with open(dataset) as data:
+        branches = csv.DictReader(data)
+        return [Branch(**row) for row in branches if row['branch'].isdigit()]

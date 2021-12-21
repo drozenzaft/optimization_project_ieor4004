@@ -25,9 +25,7 @@ class Generator():
 
 
 def load_generators(dataset):
-    """Static method: load generators.csv dataset and create a list of generators."""
-    generators = []
-    for row in csv.DictReader(open(dataset)):
-        if row['generator'].isdigit():  # don't add bottom row as a generator object
-            generators.append(Generator(**row))
-    return generators
+    """Load generators.csv dataset and return a list of generators."""
+    with open(dataset) as data:
+        generators = csv.DictReader(data)
+        return [Generator(**row) for row in generators if row['generator'].isdigit()]
