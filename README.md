@@ -17,14 +17,18 @@ Language:
 - Python 3.9.9
 
 Dependencies:
-- gurobipy package installation
-- Gurobi license
+- [gurobipy package installation](https://pypi.org/project/gurobipy/)
+- [Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/)
 
 Contents:
 ```
 ┌── README.md               # This document!
 |
-├── tasks                   # Task models
+├── tasks                   # Task models and solutions
+|   ├── solutions           # Task solutions
+│   |   ├── task1.txt       # task1 solution file
+|   |   └── task2.txt       # task2 solution file (in development as of this commit)
+|   |
 │   ├── task1.py            # Generate task1 model (in testing as of this commit)
 │   └── task2.py            # Generate task2 model (in development as of this commit)
 |
