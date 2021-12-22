@@ -34,7 +34,7 @@ def solve_task(task, filepath, **data):
     solution = solve(model)
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(solution)
-        print(f'\nWrote solution to {task1.__name__} at {filepath}')
+        print(f'\nWrote solution to {task1.__name__} at {filepath}\n')
 
 
 run_task(sys.argv[1:])
