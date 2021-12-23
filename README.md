@@ -19,13 +19,15 @@ Language:
 Dependencies:
 - [gurobipy package installation](https://pypi.org/project/gurobipy/)
 - [Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/)
+- [numpy](https://pypi.org/project/numpy/)
+- [pandas](https://pypi.org/project/pandas/)
 
 Contents:
 ```
 ┌── README.md               # This document!
 |
 ├── tasks                   # Task models and solutions
-|   ├── solutions           # Task solutions
+|   ├── solutions           # Task solutions (contains a few other temporary files as of this commit)
 │   |   ├── task1.txt       # task1 solution file
 |   |   └── task2.txt       # task2 solution file (in development as of this commit)
 |   |

@@ -1,6 +1,7 @@
 import sys
 
 from tasks import task1
+from tasks import task2
 
 
 TASK1_DATA = {
@@ -35,6 +36,12 @@ def solve_task(task, filepath, **data):
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(solution)
         print(f'\nWrote solution to {task1.__name__} at {filepath}\n')
+
+    def write_gammas():
+        """Write gammas to file for task2."""
+        gammas = task2.produce_gammas()
+        task2.print_gammas(gammas)
+    write_gammas()
 
 
 run_task(sys.argv[1:])

@@ -24,7 +24,7 @@ class Branch():
         return repr(dict(zip(self._KEYS, self._VALUES)))
 
 
-def load_branches(dataset):
+def load_branches(dataset='data/branches.csv'):
     """Load branch.csv dataset and return a list of branches."""
     with open(dataset) as data:
         branches = csv.DictReader(data)

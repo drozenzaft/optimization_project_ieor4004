@@ -37,7 +37,7 @@ class Bus():
         return repr(dict(zip(self._KEYS, self._VALUES)))
 
 
-def load_buses(dataset):
+def load_buses(dataset='data/buses.csv'):
     """Load bus.csv dataset and return a list of buses."""
     with open(dataset) as data:
         buses = csv.DictReader(data, fieldnames=_KEYS)
