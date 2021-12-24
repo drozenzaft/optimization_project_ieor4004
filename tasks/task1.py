@@ -25,7 +25,7 @@ def setup_model(generator_data, bus_data, branch_data, task1=True, output_gammas
         [theta.update({bus: model.addVar(name=f'θ{bus}')}) for bus in (b.from_bus, b.to_bus) if bus not in added and not added.add(bus)]
         p[b.branch] = model.addVar(name=f'p{b.branch}', lb=-b.u, ub=b.u)  # add p_b to model wrt constraint (2) bounds
         constr1 = p[b.branch] == (theta[b.from_bus] - theta[b.to_bus]) / b.x
-        model.addConstr(constr1, f'constr1 for branch {b.branch}')
+        model.addConstr(constr1, f'constr1 dual for branch {b.branch}')
 
     # set generator constraint (5)
     gamma = {} if task1 else produce_gammas(generators, output_gammas=output_gammas)  # generate random gammas for task 2
@@ -48,7 +48,7 @@ def setup_model(generator_data, bus_data, branch_data, task1=True, output_gammas
         )
         constr6_rhs = sum([gamma[generator.generator] for generator in G_i]) - (i.load - S[i.bus])
         constr6 = constr6_lhs == constr6_rhs
-        model.addConstr(constr6, f'constr6 for bus {i.bus}')
+        model.addConstr(constr6, f'constr6 dual for bus {i.bus}')
 
         obj += (10 ** 6) * S[i.bus]  # update objective function for each bus
 
