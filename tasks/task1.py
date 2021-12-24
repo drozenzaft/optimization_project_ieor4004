@@ -4,12 +4,15 @@ import gurobipy as grbpy
 from classes.generator import load_generators
 from classes.bus import load_buses
 from classes.branch import load_branches
+from tasks.task2 import produce_gammas
 
 
-def setup_model(generator_data, bus_data, branch_data):
-    """Minimize objective (8) with respect to constraints (1), (2), (5), (6) and (7)."""
+def setup_model(generator_data, bus_data, branch_data, task1=True, output_gammas=True):
+    """Minimize objective (8) with respect to constraints (1), (2), (5), (6) and (7).
+    Pass random_gammas argument to preset gammas for Task 2."""
+
     generators, buses, branches = (
-        load_generators(generator_data),
+        load_generators(dataset=generator_data, wind_filter=(not task1)),  # set wind filter for task 2
         load_buses(bus_data),
         load_branches(branch_data)
     )
@@ -25,9 +28,10 @@ def setup_model(generator_data, bus_data, branch_data):
         model.addConstr(constr1, f'constr1 for branch {b.branch}')
 
     # set generator constraint (5)
-    gamma = {}
+    gamma = {} if task1 else produce_gammas(generators, output_gammas=output_gammas)  # generate random gammas for task 2
     for g in generators:
-        gamma[g.generator] = model.addVar(name=f'Γ{g.generator}', lb=0, ub=g.pmax)  # add gamma_b to model wrt constraint (5) bounds
+        if task1:  # task 1 - add gammas to model for optimization
+            gamma[g.generator] = model.addVar(name=f'Γ{g.generator}', lb=0, ub=g.pmax)  # task 1: add gamma to model wrt constraint (5)
         obj += g.sigma * gamma[g.generator]  # update objective function for each generator
 
     # set bus constraints (6) and (7)

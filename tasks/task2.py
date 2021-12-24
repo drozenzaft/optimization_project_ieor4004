@@ -1,9 +1,6 @@
 """Task 2 functions."""
 import numpy as np
-from numpy.random import default_rng
 import pandas as pd
-
-from classes.generator import load_generators
 
 
 # def print_dual(model, filepath):
@@ -23,23 +20,26 @@ def get_cov_matrix(cov_data='data/scaledcov.txt'):
 
 def randomize_gammas(pmax, cov):
     """Generate MVN distribution using optimized gammas."""
-    mvn = default_rng().multivariate_normal(pmax, cov)
+    mvn = np.random.default_rng().multivariate_normal(pmax, cov)
     return np.where(mvn < 0, 0, mvn)  # replace negatives with 0
 
 
-def produce_gammas(n=1000):
-    """Repeat gamma randomization n times."""
-    wind_generators = load_generators(wind_filter=True)
-    pmax = [wind_generator.pmax for wind_generator in wind_generators]
+def produce_gammas(generators, output_gammas=False):
+    """Produce gammas according to generator parameters and return a dictionary in the form {generator_i.generator: gamma_i}."""
+    id, pmax = [], []
+    for generator in generators:
+        id.append(generator.generator)
+        pmax.append(generator.pmax)
     cov = get_cov_matrix()
-    return [randomize_gammas(pmax, cov) for _ in range(n)]
+    gammas = randomize_gammas(pmax, cov)
+    write_gammas(gammas) if output_gammas else None
+    return dict(zip(id, gammas))
 
 
-def print_gammas(gammas, filename='tasks/solutions/gammas.txt'):
+def write_gammas(gammas, filename='tasks/solutions/gammas.txt'):
     """Write gammas to a file."""
-    with open(filename, 'w', encoding='utf-8') as f:
+    with open(filename, 'a', encoding='utf-8') as f:
         np.savetxt(f, gammas)
-        print(f'Wrote gammas to file {filename}\n')
 
 
 def get_costs(duals):

@@ -26,6 +26,8 @@ Contents:
 ```
 ┌── README.md               # This document!
 |
+|── gurobi.env              # Configure Gurobi environment to suppress console output (solutions are stored in tasks/solutions)
+|
 ├── tasks                   # Task models and solutions
 |   ├── solutions           # Task solutions (contains a few other temporary files as of this commit)
 │   |   ├── task1.txt       # task1 solution file
