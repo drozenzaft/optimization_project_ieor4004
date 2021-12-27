@@ -4,18 +4,19 @@ import gurobipy as grbpy
 from classes.generator import load_generators
 from classes.bus import load_buses
 from classes.branch import load_branches
-from tasks.task2 import produce_gammas
+from tasks.task2 import produce_pmaxes
 
 
-def setup_model(generator_data, bus_data, branch_data, task1=True, output_gammas=True):
+def setup_model(generator_data, bus_data, branch_data, task1=True, output_pmaxes=True):
     """Minimize objective (8) with respect to constraints (1), (2), (5), (6) and (7).
-    Pass random_gammas argument to preset gammas for Task 2."""
+    Pass random_pmaxes argument to randomize pmaxes for Task 2."""
 
     generators, buses, branches = (
-        load_generators(dataset=generator_data, wind_filter=(not task1)),  # set wind filter for task 2
+        load_generators(generator_data),
         load_buses(bus_data),
         load_branches(branch_data)
     )
+    new_pmaxes = {} if task1 else produce_pmaxes(generators, output_pmaxes=output_pmaxes)  # generate random pmaxes for task 2
     model, obj = grbpy.Model(), 0
 
     # set branch constraints (1) and (2)
@@ -28,10 +29,10 @@ def setup_model(generator_data, bus_data, branch_data, task1=True, output_gammas
         model.addConstr(constr1, f'constr1 dual for branch {b.branch}')
 
     # set generator constraint (5)
-    gamma = {} if task1 else produce_gammas(generators, output_gammas=output_gammas)  # generate random gammas for task 2
+    gamma = {}
     for g in generators:
-        if task1:  # task 1 - add gammas to model for optimization
-            gamma[g.generator] = model.addVar(name=f'Γ{g.generator}', lb=0, ub=g.pmax)  # task 1: add gamma to model wrt constraint (5)
+        ub = new_pmaxes[g.generator] if g.generator in new_pmaxes else g.pmax  # set upper bound based on mvn sample for task 2
+        gamma[g.generator] = model.addVar(name=f'Γ{g.generator}', lb=0, ub=ub)  # add gamma to model wrt constraint (5)
         obj += g.sigma * gamma[g.generator]  # update objective function for each generator
 
     # set bus constraints (6) and (7)

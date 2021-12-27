@@ -24,10 +24,8 @@ class Generator():
         return repr(dict(zip(self._KEYS, self._VALUES)))
 
 
-def load_generators(dataset='data/generators.csv', wind_filter=False):
+def load_generators(dataset='data/generators.csv'):
     """Load generators.csv dataset and return a list of generators. Optional: filter wind fuel generators (default no)."""
     with open(dataset) as data:
         generators = csv.DictReader(data)
-        return [Generator(**row) for row in generators if row['generator'].isdigit() and (
-            not wind_filter or (wind_filter and row['fuel'] == 'wind'))
-        ]
+        return [Generator(**row) for row in generators if row['generator'].isdigit()]

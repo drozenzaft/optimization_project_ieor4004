@@ -11,33 +11,33 @@ def get_cov_matrix(cov_data='data/scaledcov.txt'):
     return pd.read_csv(cov_data, sep=' ', header=None).dropna(how='all', axis=1, inplace=False)
 
 
-def randomize_gammas(pmax, cov):
-    """Generate MVN distribution using optimized gammas."""
+def randomize_pmaxes(pmax, cov):
+    """Generate MVN distribution using pmax in dataset as mean."""
     mvn = np.random.default_rng().multivariate_normal(pmax, cov)
     return np.where(mvn < 0, 0, mvn)  # replace negatives with 0
 
 
-def produce_gammas(generators, output_gammas=False):
-    """Produce gammas according to generator parameters and return a dictionary in the form {generator_i.generator: gamma_i}."""
+def produce_pmaxes(generators, fuel='wind', output_pmaxes=True):
+    """Produce random pmaxes for specified fuel (default wind) and return a dictionary in the form {generator_g.generator: pmax_g}."""
     id, pmax = [], []
     for generator in generators:
-        id.append(generator.generator)
-        pmax.append(generator.pmax)
+        if generator.fuel == fuel:
+            id.append(generator.generator)
+            pmax.append(generator.pmax)
     cov = get_cov_matrix()
-    gammas = randomize_gammas(pmax, cov)
-    write_gammas(gammas) if output_gammas else None
-    return dict(zip(id, gammas))
+    pmaxes = randomize_pmaxes(pmax, cov)
+    write_pmaxes(pmaxes) if output_pmaxes else None
+    return dict(zip(id, pmaxes))
 
 
-def write_gammas(gammas, filename='tasks/solutions/gammas.txt'):
-    """Write gammas to a file."""
-    with open(filename, 'a', encoding='utf-8') as f:
-        np.savetxt(f, gammas)
+def write_pmaxes(pmaxes, filename='tasks/solutions/pmaxes.txt'):
+    """Write pmaxes to a file."""
+    with open(filename, 'w', encoding='utf-8') as f:
+        np.savetxt(f, pmaxes)
 
 
 def compute_cost(solved_model):
     """Given a solved model, use the bus dataset to compute the cost."""
-    # Write this later
     vars = solved_model.getVars()
     buses = load_buses()
 
