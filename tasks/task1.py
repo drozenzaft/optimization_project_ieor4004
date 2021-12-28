@@ -54,4 +54,5 @@ def setup_model(generator_data, bus_data, branch_data, task1=True, output_pmaxes
         obj += (10 ** 6) * S[i.bus]  # update objective function for each bus
 
     model.setObjective(obj, grbpy.GRB.MINIMIZE)
+    model.write("LP-task2.lp")
     return model

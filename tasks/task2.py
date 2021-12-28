@@ -14,7 +14,7 @@ def get_cov_matrix(cov_data='data/scaledcov.txt'):
 def randomize_pmaxes(pmax, cov):
     """Generate MVN distribution using pmax in dataset as mean."""
     mvn = np.random.default_rng().multivariate_normal(pmax, cov)
-    return np.where(mvn < 0, 0, mvn)  # replace negatives with 0
+    return np.where(mvn < 0.01, 0, mvn)  # replace negatives and small numbers with 0
 
 
 def produce_pmaxes(generators, fuel='wind', output_pmaxes=True):

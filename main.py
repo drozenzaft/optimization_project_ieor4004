@@ -28,7 +28,7 @@ def run_task(args, output_pmaxes=True, data=_DATA):
     i = 0
     while i < 1000:  # run task2 1000 times if selected
         if i == 0:
-            write_solution = True  # Write last solution to file
+            write_solution = True  # Write first solution to file
         elif i == 1:
             write_solution = False
         try:
@@ -36,6 +36,7 @@ def run_task(args, output_pmaxes=True, data=_DATA):
             i += 1
         except AttributeError:
             print(f'Ran into infeasible LP after iteration {i}')
+            break
         cost_data.append(cost)
     print(f'Wrote pmaxes at tasks/solutions/pmaxes.txt\n') if output_pmaxes else None
 
