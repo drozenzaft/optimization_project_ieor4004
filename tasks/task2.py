@@ -54,10 +54,10 @@ def compute_cost(solved_model):
     return cost
 
 
-def plot_costs(costs):
+def plot_costs(costs, filename='tasks/solutions/costs_histogram.png'):
     """Plot cost distribution on a histogram."""
-    plt.hist(costs)
-    filename = 'tasks/solutions/costs_histogram.png'
+    filtered_costs = [i for i in costs if i >= 5000000]  # filter strange outliers (will investigate them in future)
+    plt.hist(filtered_costs)
     plt.savefig(filename)
     print(f"Saving cost distribution histogram to {filename}\n")
     plt.close()

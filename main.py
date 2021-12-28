@@ -25,13 +25,16 @@ def run_task(args, output_pmaxes=True, data=_DATA):
         return
 
     write_solution, cost_data = False, []
-    for i in range(1000):  # run task2 1000 times if selected
+    i = 0
+    while i < 1000:  # run task2 1000 times if selected
         if i == 0:
-            write_solution = True  # Write last solution to file
+            write_solution = True  # write first solution to file
         elif i == 1:
             write_solution = False
         cost = solve_task(filepath, write_solution=write_solution, **data)
         cost_data.append(cost)
+        print(i)
+        i += 1
     print(f'Wrote pmaxes at tasks/solutions/pmaxes.txt\n') if output_pmaxes else None
 
     with open('tasks/solutions/costs.txt', 'w', encoding='utf-8') as f:  # write costs to file
@@ -46,6 +49,9 @@ def solve_task(filepath, write_solution=True, **data):
 
     def solve(model):
         """Solve model and return solution string."""
+        if not data['task1']:
+            model.params.method = 2
+            model.params.Crossover = 0
         model.optimize()
         solution = f'Optimal Objective Value: {model.getObjective().getValue()}\n'
         for v in model.getVars():
