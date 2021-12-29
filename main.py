@@ -64,7 +64,7 @@ def solve_task(filepath, write_solution=True, **data):
             f.write(solution)
             task_name = filepath[-9:-4]
             print(f'\nWrote solution to {task_name} at {filepath}\n')
-    return task2.compute_cost(solved_model) if not data['task1'] else None
+    return task2.compute_cost(solved_model, output_params=write_solution) if not data['task1'] else None
 
 
 run_task(sys.argv[1:])

@@ -36,7 +36,7 @@ def write_pmaxes(pmaxes, filename='tasks/solutions/pmaxes.txt'):
         np.savetxt(f, pmaxes)
 
 
-def compute_cost(solved_model):
+def compute_cost(solved_model, output_params=False):
     """Given a solved model, use the bus dataset to compute the cost."""
     vars = solved_model.getVars()
     buses = load_buses()
@@ -44,6 +44,10 @@ def compute_cost(solved_model):
     # build out π dictionary in form {bus_id: dual_value} - split to extract bus_id from constrname
     π = {int(c.constrname.split(' ')[-1]): c.pi for c in solved_model.getConstrs() if c.constrname[6] == '6'}
     S = {int(v.varname[1:]): v.x for v in vars if v.varname[0] == 'S'}  # slice varname to exclude 'S'
+    if output_params:
+        with open('tasks/solutions/cost_params.txt', 'w', encoding='utf-8') as f:
+            f.write(f'π dictionary:\n\n{π}\n\n\nS dictionary:\n\n{S}')
+            print('\nWrote cost addends to tasks/solutions/cost_params.txt\n')
 
     cost = 0
     for i in buses:
