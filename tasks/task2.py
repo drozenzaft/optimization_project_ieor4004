@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from classes.generator import load_generators
+from classes.bus import load_buses
 
 
 def get_cov_matrix(cov_data='data/scaledcov.txt'):
@@ -36,44 +37,48 @@ def write_pmaxes(pmaxes, filename='tasks/solutions/pmaxes.txt'):
         np.savetxt(f, pmaxes)
 
 
-def compute_cost(solved_model, output_params=False):
+def compute_cost(solved_model, eec=False, output_params=False):
     """Given a solved model, use the bus dataset to compute the cost."""
     vars = solved_model.getVars()
     generators = load_generators()
-    gammas = {}
-    expanded = []
-    for v in vars:
-        if v.varname[0] == 'Γ':
-            generator_id = int(v.varname[1:])
-            gammas[generator_id] = v.x
-        if len(v.varname) > 2 and v.varname[2] == 'a':
-            if v.x == 1:
-                generator_id = int(v.varname[3:])
-                expanded.append(generator_id)
-    cost = 0
-    for generator in generators:
-        if (gammas[generator.generator] - generator.pmax) > 1:  # set tolerance for capped generator value
-            cost += generator.sigma * generator.pmax + 4*generator.sigma*(gammas[generator.generator]-generator.pmax)**2
-            print(f'new cost calculation for generator {generator.generator}')
-        else:
-            cost += generator.sigma * generator.pmax
-        if generator.generator in expanded:
-            cost += generator.sigma / 10 * generator.pmax
+    buses = load_buses()
+
+    if eec:
+        gammas = {}
+        expanded = []
+        for v in vars:
+            if v.varname[0] == 'Γ':
+                generator_id = int(v.varname[1:])
+                gammas[generator_id] = v.x
+            if len(v.varname) > 2 and v.varname[2] == 'a':
+                if v.x == 1:
+                    generator_id = int(v.varname[3:])
+                    expanded.append(generator_id)
+        cost = 0
+        for generator in generators:
+            if (gammas[generator.generator] - generator.pmax) > 1:  # set tolerance for capped generator value
+                cost += generator.sigma * generator.pmax + 4 * generator.sigma * (gammas[generator.generator] - generator.pmax) ** 2
+                print(f'new cost calculation for generator {generator.generator}')
+            else:
+                cost += generator.sigma * generator.pmax
+            if generator.generator in expanded:
+                cost += generator.sigma / 10 * generator.pmax
 
     # build out π dictionary in form {bus_id: dual_value} - split to extract bus_id from constrname
-    '''π = {int(c.constrname.split(' ')[-1]): c.pi for c in solved_model.getConstrs() if c.constrname[6] == '6'}
-    S = {int(v.varname[1:]): v.x for v in vars if v.varname[0] == 'S'}  # slice varname to exclude 'S'
-    if output_params:
-        with open('tasks/solutions/cost_params.txt', 'w', encoding='utf-8') as f:
-            f.write(f'π dictionary:\n\n{π}\n\n\nS dictionary:\n\n{S}')
-            print('\nWrote cost addends to tasks/solutions/cost_params.txt\n')
+    else:
+        π = {int(c.constrname.split(' ')[-1]): c.pi for c in solved_model.getConstrs() if c.constrname[6] == '6'}
+        S = {int(v.varname[1:]): v.x for v in vars if v.varname[0] == 'S'}  # slice varname to exclude 'S'
+        if output_params:
+            with open('tasks/solutions/cost_params.txt', 'w', encoding='utf-8') as f:
+                f.write(f'π dictionary:\n\n{π}\n\n\nS dictionary:\n\n{S}')
+                print('\nWrote cost addends to tasks/solutions/cost_params.txt\n')
 
-    cost = 0
-    for i in buses:
-        π_i = -π[i.bus]
-        d_i = i.load
-        S_i = S[i.bus]
-        cost += π_i * (d_i - S_i)'''
+        cost = 0
+        for i in buses:
+            π_i = -π[i.bus]
+            d_i = i.load
+            S_i = S[i.bus]
+            cost += π_i * (d_i - S_i)
     return cost
 
 

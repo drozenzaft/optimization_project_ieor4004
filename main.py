@@ -32,11 +32,10 @@ def run_task(args, output_pmaxes=True, data=_DATA):
         elif i == 1:
             write_solution = False
         model,cost = solve_task(filepath, write_solution=write_solution, **data)
-        if cost < 5000000:
+        if cost < 5000000:  # filter a couple of outliers
             with open('tasks/solutions/outliers.txt', 'w', encoding='utf-8') as f1:  # write costs to file
                 f1.write(str(model.display()))
                 model.write('model.lp')
-        #model.write('model.lp')
         cost_data.append(cost)
         print(i)
         i += 1
