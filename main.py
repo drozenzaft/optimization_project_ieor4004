@@ -49,9 +49,9 @@ def run_task(args, output_pmaxes=True, data=_DATA):
         i += 1
     print(f'Wrote pmaxes at tasks/solutions/pmaxes.txt\n') if output_pmaxes else None
 
-    with open('tasks/solutions/costs.txt', 'w', encoding='utf-8') as f:  # write costs to file
+    with open(f'tasks/solutions/task{task}_costs.txt', 'w', encoding='utf-8') as f:  # write costs to file
         f.write(str(cost_data))
-        print('Wrote costs at tasks/solutions/costs.txt\n')
+        print(f'Wrote costs at tasks/solutions/task{task}_costs.txt\n')
     task2.plot_costs(cost_data)
 
 
