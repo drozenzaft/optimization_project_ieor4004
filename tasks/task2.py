@@ -45,24 +45,32 @@ def compute_cost(solved_model, eec=False, output_params=False):
 
     if eec:
         gammas = {}
+        new_gammas = {}
         expanded = []
         for v in vars:
-            if v.varname[0] == 'Γ':
+            if v.varname[0] == 'Γ' and v.varname[1] != '_':
                 generator_id = int(v.varname[1:])
                 gammas[generator_id] = v.x
+            if v.varname[1] == '_':
+                generator_id = int(v.varname[5:])
+                new_gammas[generator_id] = v.x
             if len(v.varname) > 2 and v.varname[2] == 'a':
                 if v.x == 1:
                     generator_id = int(v.varname[3:])
                     expanded.append(generator_id)
         cost = 0
         for generator in generators:
-            if (gammas[generator.generator] - generator.pmax) > 1:  # set tolerance for capped generator value
-                cost += generator.sigma * generator.pmax + 4 * generator.sigma * (gammas[generator.generator] - generator.pmax) ** 2
-                print(f'new cost calculation for generator {generator.generator}')
-            else:
-                cost += generator.sigma * generator.pmax
             if generator.generator in expanded:
                 cost += generator.sigma / 10 * generator.pmax
+                if (new_gammas[generator.generator] - generator.pmax) > 1:  # set tolerance for capped generator value
+                    cost += generator.sigma * generator.pmax + 4 * generator.sigma * (gammas[generator.generator] - generator.pmax) ** 2
+                    print(f'new cost calculation for generator {generator.generator}')
+                else:
+                    cost += generator.sigma * generator.pmax
+            else:
+                if (new_gammas[generator.generator] - generator.pmax) > 1:  # set tolerance for capped generator value
+                    cost += generator.sigma * generator.pmax + 4 * generator.sigma * (gammas[generator.generator] - generator.pmax) ** 2
+                    print(f'new cost calculation for generator {generator.generator}')            
 
     # build out π dictionary in form {bus_id: dual_value} - split to extract bus_id from constrname
     else:
