@@ -11,9 +11,17 @@ class Generator():
         self.fuel = kwargs['fuel']
         self.pmax = float(kwargs['pmax'])
         self.sigma = float(kwargs['sigma'])
+        self.expanded = False
 
         self._KEYS = ('generator', 'bus', 'fuel', 'nuclear', 'pmax', 'sigma')
         self._VALUES = (self.generator, self.bus, self.fuel, self.pmax, self.sigma)
+
+    def expand(self):
+        """Expand the generator and return the cost of doing so."""
+        self.expanded = True
+        self.expanded_pmax = self.pmax * 2
+        return 0.1 * self.sigma * self.pmax
+
 
     def __str__(self):
         """Printed representation of a generator."""
