@@ -1,21 +1,21 @@
 """Task 1 LP solution."""
 import gurobipy as grbpy
 
-from classes.generator import load_generators
-from classes.bus import load_buses
-from classes.branch import load_branches
+# from classes.generator import load_generators
+# from classes.bus import load_buses
+# from classes.branch import load_branches
 from tasks.task2 import produce_pmaxes
 
 
-def setup_model(generator_data, bus_data, branch_data, task1=True, output_pmaxes=True):
+def setup_model(generators, buses, branches, task1=True, output_pmaxes=True):
     """Minimize objective (8) with respect to constraints (1), (2), (5), (6) and (7).
     Pass random_pmaxes argument to randomize pmaxes for Task 2."""
 
-    generators, buses, branches = (
-        load_generators(generator_data),
-        load_buses(bus_data),
-        load_branches(branch_data)
-    )
+    # generators, buses, branches = (
+    #     load_generators(generator_data),
+    #     load_buses(bus_data),
+    #     load_branches(branch_data)
+    # )
     new_pmaxes = {} if task1 else produce_pmaxes(generators, output_pmaxes=output_pmaxes)  # generate random pmaxes for task 2
     model, obj = grbpy.Model(), 0
 
@@ -54,4 +54,4 @@ def setup_model(generator_data, bus_data, branch_data, task1=True, output_pmaxes
         obj += (10 ** 6) * S[i.bus]  # update objective function for each bus
 
     model.setObjective(obj, grbpy.GRB.MINIMIZE)
-    return model
+    return model, new_pmaxes
