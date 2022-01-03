@@ -11,7 +11,7 @@ cost_list = np.array(cost_list)
 # remove the outliers
 cost_list = cost_list[cost_list>5000000]  # remaining 998
 
-bins=40
+bins=60
 hist, edges = np.histogram(cost_list, bins)
 x = np.linspace(min(cost_list),max(cost_list),bins)
 
