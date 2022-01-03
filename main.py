@@ -103,7 +103,7 @@ def solve_task(filepath, write_solution=True, **data):
 
 def extract_capped_generators(solved_model, new_pmaxes):
     """Extract capped-out non-wind generators from solved model and return new generator set."""
-    _TOLERANCE = 10 ** -1  # set tolerance for capped generator value
+    _TOLERANCE = 10 ** -2  # set tolerance for capped generator value
     solution = f'Optimal Objective Value: {solved_model.getObjective().getValue()}\n'
     generators = load_generators()
     gammas = {}
@@ -113,8 +113,10 @@ def extract_capped_generators(solved_model, new_pmaxes):
             generator_id = int(v.varname[1:])
             gammas[generator_id] = v.x
     for generator in generators:
-        if generator.fuel != 'wind' and abs(gammas[generator_id] - generator.pmax) <= _TOLERANCE:
+        if generator.fuel != 'wind' and abs(gammas[generator.generator] - generator.pmax) <= _TOLERANCE:
             generator.pmax *= 2
+            #print(f"Doubled pmax value for generator {generator.generator}")
+            #print(f"New pmax value is {generator.pmax}")
         elif generator.fuel == 'wind':
             generator.pmax = new_pmaxes[generator.generator]
     return generators, solution
