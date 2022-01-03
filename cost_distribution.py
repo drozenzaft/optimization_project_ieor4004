@@ -1,5 +1,3 @@
-
-from scipy.stats import shapiro
 import numpy as np
 import scipy.stats as stats
 import scipy
@@ -32,11 +30,12 @@ plt.scatter(x,y)
 #Z95 = 1.96
 #VAR = Z95*sigma + mu
 
-a, loc, scale = scipy.stats.lognorm.fit(cost_list)
+a, loc, scale = scipy.stats.lognorm.fit(cost_list, loc = 5345771.6318737976, scale = 22690.626344507498)
+print(a, loc, scale)
 fitted_data = scipy.stats.lognorm.pdf(x, a, loc, scale)
-scale_param = 70000/bins
+scale_param = (max(cost_list)-min(cost_list))/bins
 plt.plot(x, scale_param*fitted_data, color='red')
-#plt.savefig('solutions/cost_distribution.png')
+plt.savefig('tasks/solutions/cost_distribution.png')
 
 #Calculate VAR
 print("\nThe VAR at 95 percent confidence is ", stats.lognorm.ppf(0.95, a, loc, scale),"\n")
