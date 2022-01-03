@@ -30,11 +30,26 @@ def setup_model(generator_data, bus_data, branch_data, task1=True, output_pmaxes
 
     # set generator constraint (5)
     gamma = {}
+    new_gamma = {}
+    bia = {}
+    bib = {}
     for g in generators:
         ub = new_pmaxes[g.generator] if g.generator in new_pmaxes else g.pmax  # set upper bound based on mvn sample for task 2
         gamma[g.generator] = model.addVar(name=f'Γ{g.generator}', lb=0, ub=ub)  # add gamma to model wrt constraint (5)
-        obj += g.sigma * gamma[g.generator]  # update objective function for each generator
-
+        new_gamma[g.generator] = model.addVar(name=f'Γ{g.generator}', lb=0, ub=2*ub) #case when expanded
+        if g.fuel != 'wind':
+            bin_ia = model.addVar(vtype=grbpy.GRB.BINARY,name=f'exa{g.generator}') # add binary_a for each generator
+            bin_ib = model.addVar(vtype=grbpy.GRB.BINARY,name=f'exb{g.generator}')
+            bia[g.generator] = bin_ia
+            bib[g.generator] = bin_ib
+            constr_expanded = bin_ia + bin_ib <= 1 
+            model.addConstr(constr_expanded, f'constr_expanded')
+            obj += bin_ib*(g.sigma * gamma[g.generator]) +bin_ia*(g.sigma * new_gamma[g.generator]) # update objective function for each generator
+            obj += g.sigma /10 * bin_ia
+        else:
+            obj += g.sigma * gamma[g.generator]
+    constr_binary = sum(bia.values()) <= 10
+    model.addConstr(constr_binary, f'constr_binary')
     # set bus constraints (6) and (7)
     S = {}
     for i in buses:
@@ -47,7 +62,13 @@ def setup_model(generator_data, bus_data, branch_data, task1=True, output_pmaxes
             sum([p[from_branch.branch] for from_branch in F_i])
             - sum([p[to_branch.branch] for to_branch in T_i])
         )
-        constr6_rhs = sum([gamma[generator.generator] for generator in G_i]) - (i.load - S[i.bus])
+        l = []
+        for generator in G_i:
+            if generator.fuel == 'wind':
+                l.append(gamma[generator.generator])
+            else:
+                l.append(bib[generator.generator]*gamma[generator.generator] + bia[generator.generator]*new_gamma[generator.generator])
+        constr6_rhs = sum(l) - (i.load - S[i.bus])
         constr6 = constr6_lhs == constr6_rhs
         model.addConstr(constr6, f'constr6 dual for bus {i.bus}')
 
