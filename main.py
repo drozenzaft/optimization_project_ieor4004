@@ -116,8 +116,8 @@ def extract_capped_generators(solved_model, new_pmaxes):
     for generator in generators:
         if generator.fuel != 'wind' and abs(gammas[generator_id] - generator.pmax) <= 10 ** -1:  # set tolerance for capped generator value
             generator.pmax *= 2
-            print(f'Doubled pmax value for generator {generator.generator}')
-            print(f'New pmax value is {generator.pmax}')
+            # print(f'Doubled pmax value for generator {generator.generator}')
+            # print(f'New pmax value is {generator.pmax}')
         elif generator.fuel == 'wind':
             generator.pmax = new_pmaxes[generator.generator]
     return generators, solution
