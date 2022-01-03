@@ -17,7 +17,7 @@ This will generate a solution file at `tasks/solutions/[task].txt`.
 
 
 To generate cost distribution plots for tasks 2 and 3:
-- `python main.py [task]`
+- `python cost_distribution.py [task]`
 where task is either 2 or 3.
 
 This will generate a cost distribution plot at `tasks/solutions/[task]_cost_distribution.png`.

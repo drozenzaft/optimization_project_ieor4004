@@ -28,10 +28,10 @@ def produce_pmaxes(generators, fuel='wind', output_pmaxes=True):
     cov = get_cov_matrix()
     pmaxes = randomize_pmaxes(pmax, cov)
     write_pmaxes(pmaxes) if output_pmaxes else None
-    return dict(zip(id, pmaxes))
+    return dict(zip(id, pmaxes))  # use a simpler object to reuse memory, better optimize code
 
 
-def write_pmaxes(pmaxes, filename='tasks/solutions/pmaxes.txt'):
+def write_pmaxes(pmaxes, filename='tasks/solutions/pmaxes.txt'):  # write to memory map, or a binary file
     """Write pmaxes to a file."""
     with open(filename, 'w', encoding='utf-8') as f:
         np.savetxt(f, pmaxes)
@@ -70,7 +70,7 @@ def compute_cost(solved_model, eec=False, output_params=False):
             else:
                 if (new_gammas[generator.generator] - generator.pmax) > 1:  # set tolerance for capped generator value
                     cost += generator.sigma * generator.pmax + 4 * generator.sigma * (gammas[generator.generator] - generator.pmax) ** 2
-                    print(f'new cost calculation for generator {generator.generator}')            
+                    print(f'new cost calculation for generator {generator.generator}')
 
     # build out π dictionary in form {bus_id: dual_value} - split to extract bus_id from constrname
     else:
