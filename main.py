@@ -71,12 +71,12 @@ def solve_task(filepath, write_solution=True, **data):
             model.params.Crossover = 0
         model.optimize()
 
-        if data['task1']:
+        if data['task'] in {'1', '2'}:
             solution = f'Optimal Objective Value: {model.getObjective().getValue()}\n'
             for v in model.getVars():
                 solution += f'{v.varname} = {v.x}\n'
             new_generators = {}
-        else:
+        else:  # extract capped generators for task 3
             new_generators, solution = extract_capped_generators(model, pmaxes)
         return model, solution, new_generators
 
@@ -93,7 +93,6 @@ def solve_task(filepath, write_solution=True, **data):
     if data['task'] == '3':
         return solve_task3()
 
-
     if write_solution:
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(solution)
@@ -104,8 +103,8 @@ def solve_task(filepath, write_solution=True, **data):
 
 def extract_capped_generators(solved_model, new_pmaxes):
     """Extract capped-out non-wind generators from solved model and return new generator set."""
+    _TOLERANCE = 10 ** -1  # set tolerance for capped generator value
     solution = f'Optimal Objective Value: {solved_model.getObjective().getValue()}\n'
-    # print(f'new pmaxes:\n\n{new_pmaxes}')
     generators = load_generators()
     gammas = {}
     for v in solved_model.getVars():
@@ -114,15 +113,11 @@ def extract_capped_generators(solved_model, new_pmaxes):
             generator_id = int(v.varname[1:])
             gammas[generator_id] = v.x
     for generator in generators:
-        if generator.fuel != 'wind' and abs(gammas[generator_id] - generator.pmax) <= 10 ** -1:  # set tolerance for capped generator value
+        if generator.fuel != 'wind' and abs(gammas[generator_id] - generator.pmax) <= _TOLERANCE:
             generator.pmax *= 2
-            # print(f'Doubled pmax value for generator {generator.generator}')
-            # print(f'New pmax value is {generator.pmax}')
         elif generator.fuel == 'wind':
             generator.pmax = new_pmaxes[generator.generator]
     return generators, solution
-
-
 
 
 run_task(sys.argv[1:])
