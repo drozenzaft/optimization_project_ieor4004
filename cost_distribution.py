@@ -19,19 +19,8 @@ x = np.linspace(min(cost_list),max(cost_list),bins)
 y = [float(h)/np.size(cost_list) for h in hist]
 plt.scatter(x,y)
 
-# fit normal distribution
-#mu, sigma = scipy.stats.norm.fit(cost_list)
-#fitted_data = scipy.stats.distributions.norm.pdf(x,mu,sigma)
-#scale_param = 1000
-#plt.plot(x, scale_param*stats.norm.pdf(x, mu, sigma), color='red')
-#plt.savefig('tasks/solutions/cost_distribution.png')
-
-# Calculate VAR
-#Z95 = 1.96
-#VAR = Z95*sigma + mu
-
 a, loc, scale = scipy.stats.lognorm.fit(cost_list, loc = 5345771.6318737976, scale = 22690.626344507498)
-print(a, loc, scale)
+print(f"\nThe parameters for shape, loc and scale are{a}, {loc}, and{scale}.")
 fitted_data = scipy.stats.lognorm.pdf(x, a, loc, scale)
 scale_param = (max(cost_list)-min(cost_list))/bins
 plt.plot(x, scale_param*fitted_data, color='red')
