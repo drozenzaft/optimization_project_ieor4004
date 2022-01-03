@@ -22,7 +22,6 @@ class Generator():
         self.expanded_pmax = self.pmax * 2
         return 0.1 * self.sigma * self.pmax
 
-
     def __str__(self):
         """Printed representation of a generator."""
         return str(dict(zip(self._KEYS, self._VALUES)))
