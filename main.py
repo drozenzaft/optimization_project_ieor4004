@@ -26,15 +26,15 @@ def run_task(args, output_pmaxes=True, data=_DATA):
             task = '3'  # extra credit parts 1 and 2
         elif 'eec' in args[0]:
             task = 'eec'
+    else:
+        task = '1'
 
-    is_task1 = True if task == '1' else False
     filepath = f'tasks/solutions/task{task}.txt'
 
-    data['task1'] = is_task1
     data['task'] = task
     data['output_pmaxes'] = output_pmaxes
 
-    if is_task1:
+    if task == '1':
         solve_task(filepath, **data)
         return
 
@@ -64,11 +64,11 @@ def solve_task(filepath, write_solution=True, **data):
         load_buses(data['bus_data']),
         load_branches(data['branch_data'])
     )
-    model, pmaxes = task1.setup_model(generators, buses, branches, task1=data['task1'], output_pmaxes=data['output_pmaxes'])
+    model, pmaxes = task1.setup_model(generators, buses, branches, task=data['task'], output_pmaxes=data['output_pmaxes'])
 
     def solve(model):
         """Solve model and return solution string."""
-        if not data['task1']:
+        if data['task'] != '1':
             model.params.method = 2
             model.params.Crossover = 0
         model.optimize()
@@ -78,7 +78,7 @@ def solve_task(filepath, write_solution=True, **data):
             for v in model.getVars():
                 solution += f'{v.varname} = {v.x}\n'
             new_generators = {}
-        else:  # extract capped generators for task 3
+        elif data['task'] == '3':  # extract capped generators for task 3
             new_generators, solution = extract_capped_generators(model, pmaxes)
         return model, solution, new_generators
 
@@ -86,7 +86,7 @@ def solve_task(filepath, write_solution=True, **data):
 
     def solve_task3(write_solution=False):
         """Solve task 3."""
-        task3_model, pmaxes = task1.setup_model(new_generators, buses, branches, task1=False, output_pmaxes=data['output_pmaxes'])
+        task3_model, pmaxes = task1.setup_model(new_generators, buses, branches, task='3', output_pmaxes=data['output_pmaxes'])
         solved_task3_model, task3_solution, new_task3_generators = solve(task3_model)
         if write_solution:
             with open('tasks/solutions/task3.txt', 'w', encoding='utf-8') as f:
@@ -101,7 +101,7 @@ def solve_task(filepath, write_solution=True, **data):
             f.write(solution)
             task_name = filepath[-9:-4]
             print(f'\nWrote solution to {task_name} at {filepath}\n')
-    return task2.compute_cost(solved_model, output_params=write_solution) if not data['task1'] else None
+    return task2.compute_cost(solved_model, output_params=write_solution) if data['task'] != '1' else None
 
 
 def extract_capped_generators(solved_model, new_pmaxes):

@@ -7,16 +7,11 @@ import gurobipy as grbpy
 from tasks.task2 import produce_pmaxes
 
 
-def setup_model(generators, buses, branches, task1=True, output_pmaxes=True):
+def setup_model(generators, buses, branches, task='1', eec=False, output_pmaxes=True):
     """Minimize objective (8) with respect to constraints (1), (2), (5), (6) and (7).
     Pass random_pmaxes argument to randomize pmaxes for Task 2."""
 
-    # generators, buses, branches = (
-    #     load_generators(generator_data),
-    #     load_buses(bus_data),
-    #     load_branches(branch_data)
-    # )
-    new_pmaxes = {} if task1 else produce_pmaxes(generators, output_pmaxes=output_pmaxes)  # generate random pmaxes for task 2
+    new_pmaxes = {} if task == '1' else produce_pmaxes(generators, output_pmaxes=output_pmaxes)  # generate random pmaxes for task 2
     model, obj = grbpy.Model(), 0
 
     # set branch constraints (1) and (2)
@@ -30,11 +25,28 @@ def setup_model(generators, buses, branches, task1=True, output_pmaxes=True):
 
     # set generator constraint (5)
     gamma = {}
+    new_gamma = {}
+    bia = {}
+    bib = {}
     for g in generators:
         ub = new_pmaxes[g.generator] if g.generator in new_pmaxes else g.pmax  # set upper bound based on mvn sample for task 2
         gamma[g.generator] = model.addVar(name=f'Γ{g.generator}', lb=0, ub=ub)  # add gamma to model wrt constraint (5)
-        obj += g.sigma * gamma[g.generator]  # update objective function for each generator
-
+        if eec:
+            new_gamma[g.generator] = model.addVar(name=f'Γ_new{g.generator}', lb=0, ub=2*ub)  # case when expanded
+            if g.fuel != 'wind':
+                bin_ia = model.addVar(vtype=grbpy.GRB.BINARY,name=f'exa{g.generator}')  # add binary_a for each generator
+                bin_ib = model.addVar(vtype=grbpy.GRB.BINARY,name=f'exb{g.generator}')
+                bia[g.generator] = bin_ia
+                bib[g.generator] = bin_ib
+                constr_expanded = bin_ia + bin_ib <= 1
+                model.addConstr(constr_expanded, f'constr_expanded')
+                obj += bin_ib * (g.sigma * gamma[g.generator]) + bin_ia * (g.sigma * new_gamma[g.generator])  # update obj for each generator
+                obj += g.sigma * 0.1 * bin_ia
+        else:
+            obj += g.sigma * gamma[g.generator]
+    if eec:  # set constraint on binary variables for extra extra credit
+        constr_binary = sum(bia.values()) <= 10
+        model.addConstr(constr_binary, f'constr_binary')
     # set bus constraints (6) and (7)
     S = {}
     for i in buses:
