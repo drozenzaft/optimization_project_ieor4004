@@ -23,7 +23,9 @@ def run_task(args, output_pmaxes=True, data=_DATA):
         elif '2' in args[0]:
             task = '2'
         elif '3' in args[0]:
-            task = '3'
+            task = '3'  # extra credit parts 1 and 2
+        elif 'eec' in args[0]:
+            task = 'eec'
 
     is_task1 = True if task == '1' else False
     filepath = f'tasks/solutions/task{task}.txt'
@@ -71,7 +73,7 @@ def solve_task(filepath, write_solution=True, **data):
             model.params.Crossover = 0
         model.optimize()
 
-        if data['task'] in {'1', '2'}:
+        if data['task'] in {'1', '2', 'eec'}:
             solution = f'Optimal Objective Value: {model.getObjective().getValue()}\n'
             for v in model.getVars():
                 solution += f'{v.varname} = {v.x}\n'
@@ -82,16 +84,17 @@ def solve_task(filepath, write_solution=True, **data):
 
     solved_model, solution, new_generators = solve(model)
 
-    def solve_task3():
+    def solve_task3(write_solution=False):
         """Solve task 3."""
         task3_model, pmaxes = task1.setup_model(new_generators, buses, branches, task1=False, output_pmaxes=data['output_pmaxes'])
         solved_task3_model, task3_solution, new_task3_generators = solve(task3_model)
-        with open('tasks/solutions/task3.txt', 'w', encoding='utf-8') as f:
-            f.write(solution)
-            print(f'\nWrote solution to task3 at tasks/solutions/task3.txt\n')
+        if write_solution:
+            with open('tasks/solutions/task3.txt', 'w', encoding='utf-8') as f:
+                f.write(solution)
+                print(f'\nWrote solution to task3 at tasks/solutions/task3.txt\n')
         return task2.compute_cost(solved_task3_model, output_params=write_solution)
     if data['task'] == '3':
-        return solve_task3()
+        return solve_task3(write_solution=write_solution)
 
     if write_solution:
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -115,8 +118,6 @@ def extract_capped_generators(solved_model, new_pmaxes):
     for generator in generators:
         if generator.fuel != 'wind' and abs(gammas[generator.generator] - generator.pmax) <= _TOLERANCE:
             generator.pmax *= 2
-            #print(f"Doubled pmax value for generator {generator.generator}")
-            #print(f"New pmax value is {generator.pmax}")
         elif generator.fuel == 'wind':
             generator.pmax = new_pmaxes[generator.generator]
     return generators, solution
