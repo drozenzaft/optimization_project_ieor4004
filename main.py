@@ -44,7 +44,7 @@ def run_task(args, output_pmaxes=True, data=_DATA):
 
     cost_data = []
     i = 0
-    while i < 10:  # run task2, task3, or eec 1000 times if selected
+    while i < 1000:  # run task2, task3, or eec 1000 times if selected
         cost = solve_task(**data)
         cost_data.append(cost)
         print(i)
