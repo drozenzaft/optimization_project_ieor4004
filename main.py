@@ -26,82 +26,81 @@ def run_task(args, output_pmaxes=True, data=_DATA):
             task = '3'  # extra credit parts 1 and 2
         elif 'eec' in args[0]:
             task = 'eec'
+        if len(args) > 1 and 'v' in args[1]:
+            verbose = True  # output additional info to files
+        else:
+            verbose = False
     else:
         task = '1'
+        verbose = False
 
-    filepath = f'tasks/solutions/task{task}.txt'
-
+    data['filepath'] = f'tasks/solutions/task{task}.txt'
     data['task'] = task
-    data['output_pmaxes'] = output_pmaxes
+    data['verbose'] = verbose
 
     if task == '1':
-        solve_task(filepath, **data)
+        solve_task(**data)
         return
 
-    write_solution, cost_data = False, []
+    cost_data = []
     i = 0
-    while i < 1000:  # run task2 or task3 1000 times if selected
-        if i == 0:
-            write_solution = True  # write first solution to file
-        elif i == 1:
-            write_solution = False
-        cost = solve_task(filepath, write_solution=write_solution, **data)
+    while i < 10:  # run task2, task3, or eec 1000 times if selected
+        cost = solve_task(**data)
         cost_data.append(cost)
         print(i)
         i += 1
-    print(f'Wrote pmaxes at tasks/solutions/pmaxes.txt\n') if output_pmaxes else None
 
     with open(f'tasks/solutions/task{task}_costs.txt', 'w', encoding='utf-8') as f:  # write costs to file
         f.write(str(cost_data))
         print(f'Wrote costs at tasks/solutions/task{task}_costs.txt\n')
-    task2.plot_costs(cost_data)
+    task2.plot_costs(cost_data, task=task)
 
 
-def solve_task(filepath, write_solution=True, **data):
+def solve_task(**data):
     """Solve args-specified task and write solution to filepath. Return cost if running task 2."""
     generators, buses, branches = (
         load_generators(data['generator_data']),
         load_buses(data['bus_data']),
         load_branches(data['branch_data'])
     )
-    model, pmaxes = task1.setup_model(generators, buses, branches, task=data['task'], output_pmaxes=data['output_pmaxes'])
+    filepath, task, verbose = data['filepath'], data['task'], data['verbose']
+    model, pmaxes = task1.setup_model(generators, buses, branches, task=task, output_pmaxes=verbose)
 
     def solve(model):
         """Solve model and return solution string."""
-        if data['task'] != '1':
+        if task != '1':
             model.params.method = 2
             model.params.Crossover = 0
         model.optimize()
 
-        if data['task'] in {'1', '2', 'eec'}:
+        if task in {'1', '2', 'eec'}:
             solution = f'Optimal Objective Value: {model.getObjective().getValue()}\n'
             for v in model.getVars():
                 solution += f'{v.varname} = {v.x}\n'
             new_generators = {}
-        elif data['task'] == '3':  # extract capped generators for task 3
+        elif task == '3':  # extract capped generators for task 3
             new_generators, solution = extract_capped_generators(model, pmaxes)
         return model, solution, new_generators
 
     solved_model, solution, new_generators = solve(model)
 
-    def solve_task3(write_solution=False):
+    def solve_task3(verbose=False):
         """Solve task 3."""
-        task3_model, pmaxes = task1.setup_model(new_generators, buses, branches, task='3', output_pmaxes=data['output_pmaxes'])
+        task3_model, pmaxes = task1.setup_model(new_generators, buses, branches, task='3', output_pmaxes=verbose)
         solved_task3_model, task3_solution, new_task3_generators = solve(task3_model)
-        if write_solution:
+        if verbose:
             with open('tasks/solutions/task3.txt', 'w', encoding='utf-8') as f:
                 f.write(solution)
                 print(f'\nWrote solution to task3 at tasks/solutions/task3.txt\n')
-        return task2.compute_cost(solved_task3_model, output_params=write_solution)
-    if data['task'] == '3':
-        return solve_task3(write_solution=write_solution)
+        return task2.compute_cost(solved_task3_model, output_params=verbose)
+    if task == '3':
+        return solve_task3(verbose=verbose)
 
-    if write_solution:
+    if verbose:
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(solution)
-            task_name = filepath[-9:-4]
-            print(f'\nWrote solution to {task_name} at {filepath}\n')
-    return task2.compute_cost(solved_model, output_params=write_solution) if data['task'] != '1' else None
+            print(f'\nWrote solution to task{task} at {filepath}\n')
+    return task2.compute_cost(solved_model, task=task, output_params=verbose) if task != '1' else None
 
 
 def extract_capped_generators(solved_model, new_pmaxes):

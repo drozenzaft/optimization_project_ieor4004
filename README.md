@@ -10,14 +10,15 @@ Final project for IEOR 4004 - Introduction to Optimization @ Columbia Engineerin
 
 
 To run tasks:
-- `python main.py [task]`
-where task is either 1, 2, 3 (extra credit parts A and B), or eec (extra extra credit).
+- `python main.py [task] [v]`
+where task (required) is either 1, 2, 3 (extra credit parts A and B), or eec (extra extra credit).
+`v` is an optional argument for verbose output - this outputs more information at the cost of performance.
 
 This will generate a solution file at `tasks/solutions/[task].txt`.
 
 
 To generate cost distribution plots and/or VaR for tasks 2 and 3:
-- `python cost_distribution.py [task]`
+- `python cost_distribution.py [task] [v]`
 where task is either 2 or 3.
 
 For task 2, this will generate a cost distribution plot at `tasks/solutions/task2_cost_distribution.png`, and print the VaR at 95 percent confindence.

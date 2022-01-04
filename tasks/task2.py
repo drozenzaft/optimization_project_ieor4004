@@ -18,7 +18,7 @@ def randomize_pmaxes(pmax, cov):
     return np.where(mvn < 0, 0, mvn)  # replace negatives with 0
 
 
-def produce_pmaxes(generators, fuel='wind', output_pmaxes=True):
+def produce_pmaxes(generators, fuel='wind', task='2', output_pmaxes=True):
     """Produce random pmaxes for specified fuel (default wind) and return a dictionary in the form {generator_g.generator: pmax_g}."""
     id, pmax = [], []
     for generator in generators:
@@ -27,23 +27,25 @@ def produce_pmaxes(generators, fuel='wind', output_pmaxes=True):
             pmax.append(generator.pmax)
     cov = get_cov_matrix()
     pmaxes = randomize_pmaxes(pmax, cov)
-    write_pmaxes(pmaxes) if output_pmaxes else None
+    write_pmaxes(pmaxes, task=task) if output_pmaxes else None
     return dict(zip(id, pmaxes))  # use a simpler object to reuse memory, better optimize code
 
 
-def write_pmaxes(pmaxes, filename='tasks/solutions/pmaxes.txt'):  # write to memory map, or a binary file
+def write_pmaxes(pmaxes, task='2'):  # write to memory map, or a binary file
     """Write pmaxes to a file."""
+    filename = f'tasks/solutions/task{task}_pmaxes.txt'
     with open(filename, 'w', encoding='utf-8') as f:
         np.savetxt(f, pmaxes)
+        print(f'Wrote pmaxes at {filename}')
 
 
-def compute_cost(solved_model, eec=False, output_params=False):
+def compute_cost(solved_model, task='2', output_params=False):
     """Given a solved model, use the bus dataset to compute the cost."""
     vars = solved_model.getVars()
     generators = load_generators()
     buses = load_buses()
 
-    if eec:
+    if task == 'eec':
         gammas = {}
         new_gammas = {}
         expanded = []
@@ -64,22 +66,24 @@ def compute_cost(solved_model, eec=False, output_params=False):
                 cost += generator.sigma / 10 * generator.pmax
                 if (new_gammas[generator.generator] - generator.pmax) > 1:  # set tolerance for capped generator value
                     cost += generator.sigma * generator.pmax + 4 * generator.sigma * (gammas[generator.generator] - generator.pmax) ** 2
-                    print(f'new cost calculation for generator {generator.generator}')
+                    if output_params:
+                        print(f'expanding generator {generator.generator}')
                 else:
                     cost += generator.sigma * generator.pmax
             else:
-                if (new_gammas[generator.generator] - generator.pmax) > 1:  # set tolerance for capped generator value
+                if (gammas[generator.generator] - generator.pmax) > 1:  # set tolerance for capped generator value
                     cost += generator.sigma * generator.pmax + 4 * generator.sigma * (gammas[generator.generator] - generator.pmax) ** 2
-                    print(f'new cost calculation for generator {generator.generator}')
+                    if output_params:
+                        print(f'expanding generator {generator.generator}')
 
     # build out π dictionary in form {bus_id: dual_value} - split to extract bus_id from constrname
     else:
         π = {int(c.constrname.split(' ')[-1]): c.pi for c in solved_model.getConstrs() if c.constrname[6] == '6'}
         S = {int(v.varname[1:]): v.x for v in vars if v.varname[0] == 'S'}  # slice varname to exclude 'S'
         if output_params:
-            with open('tasks/solutions/cost_params.txt', 'w', encoding='utf-8') as f:
+            with open(f'tasks/solutions/task{task}_cost_params.txt', 'w', encoding='utf-8') as f:
                 f.write(f'π dictionary:\n\n{π}\n\n\nS dictionary:\n\n{S}')
-                print('\nWrote cost addends to tasks/solutions/cost_params.txt\n')
+                print(f'\nWrote cost addends to tasks/solutions/task{task}_cost_params.txt\n')
 
         cost = 0
         for i in buses:
@@ -87,11 +91,18 @@ def compute_cost(solved_model, eec=False, output_params=False):
             d_i = i.load
             S_i = S[i.bus]
             cost += π_i * (d_i - S_i)
+    return cost
 
 
-def plot_costs(costs, filename='tasks/solutions/costs_histogram.png'):
+def plot_costs(costs, filename='tasks/solutions/costs_histogram.png', task='2'):
     """Plot cost distribution on a histogram."""
-    filtered_costs = [i for i in costs if i >= 5000000]  # filter strange outliers (will investigate them in future)
+    filename = f'tasks/solutions/task{task}_costs_histogram.png'
+    if task == '2':
+        filtered_costs = [i for i in costs if i >= 5000000]  # filter strange outliers (will investigate them in future)
+    elif task == '3':
+        filtered_costs = [i for i in costs if i >= 3750000]  # filter strange outliers (will investigate them in future)
+    elif task == 'eec':
+        filtered_costs = [i for i in costs if i >= 1000000]  # filter strange outliers (will investigate them in future)
     plt.hist(filtered_costs)
     plt.savefig(filename)
     print(f"Saving cost distribution histogram to {filename}\n")

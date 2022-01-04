@@ -7,11 +7,11 @@ import gurobipy as grbpy
 from tasks.task2 import produce_pmaxes
 
 
-def setup_model(generators, buses, branches, task='1', eec=False, output_pmaxes=True):
+def setup_model(generators, buses, branches, task='1', output_pmaxes=True):
     """Minimize objective (8) with respect to constraints (1), (2), (5), (6) and (7).
     Pass random_pmaxes argument to randomize pmaxes for Task 2."""
 
-    new_pmaxes = {} if task == '1' else produce_pmaxes(generators, output_pmaxes=output_pmaxes)  # generate random pmaxes for task 2
+    new_pmaxes = {} if task == '1' else produce_pmaxes(generators, task=task, output_pmaxes=output_pmaxes)  # sample pmaxes for task 2
     model, obj = grbpy.Model(), 0
 
     # set branch constraints (1) and (2)
@@ -31,7 +31,7 @@ def setup_model(generators, buses, branches, task='1', eec=False, output_pmaxes=
     for g in generators:
         ub = new_pmaxes[g.generator] if g.generator in new_pmaxes else g.pmax  # set upper bound based on mvn sample for task 2
         gamma[g.generator] = model.addVar(name=f'Γ{g.generator}', lb=0, ub=ub)  # add gamma to model wrt constraint (5)
-        if eec:
+        if task == 'eec':
             new_gamma[g.generator] = model.addVar(name=f'Γ_new{g.generator}', lb=0, ub=2 * ub)  # case when expanded
             if g.fuel != 'wind':
                 bin_ia = model.addVar(vtype=grbpy.GRB.BINARY,name=f'exa{g.generator}')  # add binary_a for each generator
@@ -44,7 +44,7 @@ def setup_model(generators, buses, branches, task='1', eec=False, output_pmaxes=
                 obj += g.sigma * 0.1 * bin_ia
         else:
             obj += g.sigma * gamma[g.generator]
-    if eec:  # set constraint on binary variables for extra extra credit
+    if task == 'eec':  # set constraint on binary variables for extra extra credit
         constr_binary = sum(bia.values()) <= 10
         model.addConstr(constr_binary, f'constr_binary')
     # set bus constraints (6) and (7)
@@ -59,9 +59,22 @@ def setup_model(generators, buses, branches, task='1', eec=False, output_pmaxes=
             sum([p[from_branch.branch] for from_branch in F_i])
             - sum([p[to_branch.branch] for to_branch in T_i])
         )
-        constr6_rhs = sum([gamma[generator.generator] for generator in G_i]) - (i.load - S[i.bus])
-        constr6 = constr6_lhs == constr6_rhs
-        model.addConstr(constr6, f'constr6 dual for bus {i.bus}')
+        if task == 'eec':
+            gammas = []
+            for generator in G_i:
+                if generator.fuel == 'wind':
+                    gammas.append(gamma[generator.generator])
+                else:
+                    gammas.append(
+                        bib[generator.generator] * gamma[generator.generator] + bia[generator.generator] * new_gamma[generator.generator]
+                    )
+            constr6_rhs = sum(gammas) - (i.load - S[i.bus])
+            constr6 = constr6_lhs == constr6_rhs
+            model.addConstr(constr6, f'constr6 dual for bus {i.bus}')
+        else:
+            constr6_rhs = sum([gamma[generator.generator] for generator in G_i]) - (i.load - S[i.bus])
+            constr6 = constr6_lhs == constr6_rhs
+            model.addConstr(constr6, f'constr6 dual for bus {i.bus}')
 
         obj += (10 ** 6) * S[i.bus]  # update objective function for each bus
 
